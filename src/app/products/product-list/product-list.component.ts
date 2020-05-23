@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs';
 import { Product } from '../product';
 import { ProductService } from '../product.service';
 import { Store, select } from '@ngrx/store';
+import * as fromProduct from '../state/product.reducer';
+import { userInfo } from 'os';
 
 @Component({
   selector: 'pm-product-list',
@@ -23,7 +25,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
   selectedProduct: Product | null;
   sub: Subscription;
 
-  constructor(private productService: ProductService, private store: Store<any>){ }
+  constructor(private productService: ProductService, 
+    private store: Store<fromProduct.Sate>){ }
 
   ngOnInit(): void {
     this.sub = this.productService.selectedProductChanges$.subscribe(
@@ -37,12 +40,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
     //TODO - Unubscribe with ngrx effects
     this.store.pipe(
-      select('products')
-    ).subscribe(prod => {
-      //the first time the state is undefined
-      if (prod){
-        this.displayCode = prod.showProductCode;
-      }
+      select(fromProduct.getShowProductCode)
+    ).subscribe(result => {
+        this.displayCode = result;
     });
   }
 
