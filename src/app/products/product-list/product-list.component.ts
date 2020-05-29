@@ -5,6 +5,8 @@ import { ProductService } from '../product.service';
 import { Store, select } from '@ngrx/store';
 import * as fromProduct from '../state/product.reducer';
 import * as productActions from '../state/product.action';
+import { takeWhile } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'pm-product-list',
@@ -14,38 +16,42 @@ import * as productActions from '../state/product.action';
 export class ProductListComponent implements OnInit, OnDestroy {
   pageTitle = 'Products';
   errorMessage: string;
-
   displayCode: boolean;
-
   products: Product[];
-
   // Used to highlight the selected product in the list
   selectedProduct: Product | null;
+  componentActive: boolean = true;
+  errorMessage$: Observable<string>;
  
-
+  
   constructor(private productService: ProductService, 
     private store: Store<fromProduct.Sate>){ }
 
   ngOnInit(): void {
    this.store.pipe(
-     select(fromProduct.getCurrentProduct))
+     select(fromProduct.getCurrentProduct),
+     takeWhile(() => this.componentActive)) 
      .subscribe(cp => this.selectedProduct = cp);
-  
-    this.productService.getProducts().subscribe({
-      next: (products: Product[]) => this.products = products,
-      error: (err: any) => this.errorMessage = err.error
-    });
 
-    //TODO - Unubscribe with ngrx effects
+     this.store.dispatch(new productActions.Load());
+     this.store.pipe(
+       select(fromProduct.getProducts),
+       takeWhile(() => this.componentActive))
+       .subscribe((products:Product[]) => this.products = products);
+     
+
+      this.errorMessage$ = this.store.pipe(select(fromProduct.getError));
+  
     this.store.pipe(
-      select(fromProduct.getShowProductCode)
+      select(fromProduct.getShowProductCode),
+      takeWhile(() => this.componentActive)
     ).subscribe(result => {
         this.displayCode = result;
     });
   }
 
   ngOnDestroy(): void {
-   
+  this.componentActive = false;
   }
 
   checkChanged(value: boolean): void {
