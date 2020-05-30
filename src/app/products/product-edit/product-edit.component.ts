@@ -31,7 +31,7 @@ export class ProductEditComponent implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder,
               private productService: ProductService,
-              private store: Store<fromProduct.Sate>) {
+              private store: Store<fromProduct.State>) {
 
     // Defines all of the validation messages for the form.
     // These could instead be retrieved from a file or database.
@@ -147,10 +147,7 @@ export class ProductEditComponent implements OnInit, OnDestroy {
             error: err => this.errorMessage = err.error
           });
         } else {
-          this.productService.updateProduct(p).subscribe({
-            next: product => this.store.dispatch(new productActions.SetCurrentProduct(product)),
-            error: err => this.errorMessage = err.error
-          });
+          this.store.dispatch(new productActions.Update(p));
         }
       }
     } else {

@@ -25,23 +25,26 @@ export class ProductListComponent implements OnInit, OnDestroy {
  
   
   constructor(private productService: ProductService, 
-    private store: Store<fromProduct.Sate>){ }
+    private store: Store<fromProduct.State>){ }
 
   ngOnInit(): void {
+
+    this.store.pipe(
+      select(fromProduct.getProducts),
+      takeWhile(() => this.componentActive))
+      .subscribe((products:Product[]) => this.products = products);
+
+      // Do NOT subscribe here because it used an async pipe
+      this.errorMessage$ = this.store.pipe(select(fromProduct.getError));
+
+      this.store.dispatch(new productActions.Load());
+
    this.store.pipe(
      select(fromProduct.getCurrentProduct),
      takeWhile(() => this.componentActive)) 
      .subscribe(cp => this.selectedProduct = cp);
 
-     this.store.dispatch(new productActions.Load());
-     this.store.pipe(
-       select(fromProduct.getProducts),
-       takeWhile(() => this.componentActive))
-       .subscribe((products:Product[]) => this.products = products);
-     
-
-      this.errorMessage$ = this.store.pipe(select(fromProduct.getError));
-  
+    
     this.store.pipe(
       select(fromProduct.getShowProductCode),
       takeWhile(() => this.componentActive)
